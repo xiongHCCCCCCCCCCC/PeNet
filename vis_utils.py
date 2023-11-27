@@ -7,9 +7,10 @@ from PIL import Image
 import numpy as np
 import cv2
 
-cmap = plt.cm.jet
+cmap = plt.cm.jet  #灰度图映射彩色图
 cmap2 = plt.cm.nipy_spectral
 
+# 裁剪图片
 def validcrop(img):
     ratio = 256/1216
     h = img.size()[2]

@@ -1,14 +1,10 @@
 import os
 import os.path
 import glob
-import fnmatch  # pattern matching
 import numpy as np
-from numpy import linalg as LA
 from random import choice
 from PIL import Image
-import torch
 import torch.utils.data as data
-import cv2
 from dataloaders import transforms
 import CoordConv
 
@@ -30,7 +26,7 @@ def load_calib():
     # note: we will take the center crop of the images during augmentation
     # that changes the optical centers, but not focal lengths
     # K[0, 2] = K[0, 2] - 13  # from width = 1242 to 1216, with a 13-pixel cut on both sides
-    # K[1, 2] = K[1, 2] - 11.5  # from width = 375 to 352, with a 11.5-pixel cut on both sides
+    # K[1, 2] = K[1, 2] - 11.5  # from height = 375 to 352, with a 11.5-pixel cut on both sides
     K[0, 2] = K[0, 2] - 13
     K[1, 2] = K[1, 2] - 11.5
     return K
@@ -124,7 +120,7 @@ def get_paths_and_transform(split, args):
     else:
         # test only has d or rgb
         paths_rgb = sorted(glob.glob(glob_rgb))
-        paths_gt = [None] * len(paths_rgb)
+        paths_gt = [None] * len(paths_rgb) ## ??
         if split == "test_prediction":
             paths_d = [None] * len(
                 paths_rgb)  # test_prediction has no sparse depth
@@ -172,7 +168,7 @@ def depth_read(filename):
     assert np.max(depth_png) > 255, \
         "np.max(depth_png)={}, path={}".format(np.max(depth_png), filename)
 
-    depth = depth_png.astype(np.float) / 256.
+    depth = depth_png.astype(np.float) / 256. ##将16bit转换为8bit
     # depth[depth_png == 0] = -1.
     depth = np.expand_dims(depth, -1)
     return depth
@@ -360,7 +356,7 @@ class KittiDepth(data.Dataset):
         position = position.call()
         rgb, sparse, target, position = self.transform(rgb, sparse, target, position, self.args)
 
-        rgb, gray = handle_gray(rgb, self.args)
+        rgb, gray = handle_gray(rgb, self.args) # 将 rgb图 转换成 gray图
         # candidates = {"rgb": rgb, "d": sparse, "gt": target, \
         #              "g": gray, "r_mat": r_mat, "t_vec": t_vec, "rgb_near": rgb_near}
         candidates = {"rgb": rgb, "d": sparse, "gt": target, \
@@ -369,7 +365,7 @@ class KittiDepth(data.Dataset):
         items = {
             key: to_float_tensor(val)
             for key, val in candidates.items() if val is not None
-        }
+        } # 将 candidates 转换为tensor中的float类型
 
         return items
 

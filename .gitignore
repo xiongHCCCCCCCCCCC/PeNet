@@ -3,3 +3,5 @@
 *.pth.tar
 *.pth
 test.py
+/.idea
+/__pycache__/

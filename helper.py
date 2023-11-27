@@ -157,8 +157,8 @@ class logger:
         return getattr(result, self.args.rank_metric)
 
     def rank_conditional_save_best(self, mode, result, epoch):
-        error = self.get_ranking_error(result)
-        best_error = self.get_ranking_error(self.best_result)
+        error = self.get_ranking_error(result) #这一epoch的 erro
+        best_error = self.get_ranking_error(self.best_result) #上一epoch的 erro
         is_best = error < best_error
         if is_best and mode == "val":
             self.old_best_result = self.best_result

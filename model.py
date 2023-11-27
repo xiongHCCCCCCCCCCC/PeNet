@@ -63,7 +63,7 @@ class ENet(nn.Module):
         self.pooling = nn.AvgPool2d(kernel_size=2)
         self.sparsepooling = SparseDownSampleClose(stride=2)
 
-        weights_init(self)
+        weights_init(self) ##初始化权重值
 
     def forward(self, input):
         #independent input
@@ -92,6 +92,8 @@ class ENet(nn.Module):
         c1216 = c1216.unsqueeze(2)
         c1216 = c1216.unsqueeze(3)
 
+        # print(f'c1216: {c1216.shape}')
+
         vnorm_s2 = self.pooling(vnorm)
         vnorm_s3 = self.pooling(vnorm_s2)
         vnorm_s4 = self.pooling(vnorm_s3)
@@ -118,6 +120,9 @@ class ENet(nn.Module):
         geo_s5 = None
         geo_s6 = None
 
+        '''
+            geofeature 几何特征层
+        '''
         if self.args.convolutional_layer_encoding == "xyz":
             geo_s1 = self.geofeature(d, vnorm, unorm, 352, 1216, c352, c1216, f352, f1216)
             geo_s2 = self.geofeature(d_s2, vnorm_s2, unorm_s2, 352 / 2, 1216 / 2, c352, c1216, f352, f1216)
@@ -221,7 +226,7 @@ class ENet(nn.Module):
         d_depth, d_conf = torch.chunk(depth_output, 2, dim=1)
 
         rgb_conf, d_conf = torch.chunk(self.softmax(torch.cat((rgb_conf, d_conf), dim=1)), 2, dim=1)
-        output = rgb_conf*rgb_depth + d_conf*d_depth
+        output = rgb_depth + d_depth
 
         if(self.args.network_model == 'e'):
             return rgb_depth, d_depth, output

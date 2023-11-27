@@ -321,8 +321,8 @@ class BasicBlockGeo(nn.Module):
         if self.downsample is not None:
             identity = self.downsample(x)
 
-        out += identity
-        out = self.relu(out)
+        out += identity  ## 残差相加
+        out = self.relu(out) ## 非线性画
 
         return out
 
