@@ -7,6 +7,7 @@ from PIL import Image
 import torch.utils.data as data
 from dataloaders import transforms
 import CoordConv
+from coarseDepth import fill_in_fast
 
 input_options = ['d', 'rgb', 'rgbd', 'g', 'gd']
 
@@ -156,7 +157,7 @@ def rgb_read(filename):
     return rgb_png
 
 
-def depth_read(filename):
+def depth_read(filename, needDense=False):
     # loads depth map D from png file
     # and returns it as a numpy array,
     # for details see readme.txt
@@ -169,16 +170,23 @@ def depth_read(filename):
         "np.max(depth_png)={}, path={}".format(np.max(depth_png), filename)
 
     depth = depth_png.astype(np.float) / 256. ##将16bit转换为8bit
+    if needDense:
+        global  denseDepth
+        denseDepth = fill_in_fast(depth)
     # depth[depth_png == 0] = -1.
     depth = np.expand_dims(depth, -1)
-    return depth
+    denseDepth = np.expand_dims(denseDepth, -1)
+    if needDense:
+        return depth, denseDepth
+    else:
+        return depth
 
 def drop_depth_measurements(depth, prob_keep):
     mask = np.random.binomial(1, prob_keep, depth.shape)
     depth *= mask
     return depth
 
-def train_transform(rgb, sparse, target, position, args):
+def train_transform(rgb, sparse, target, position, args, denseDepth):
     # s = np.random.uniform(1.0, 1.5) # random scaling
     # angle = np.random.uniform(-5.0, 5.0) # random rotation degrees
     oheight = args.val_h
@@ -200,6 +208,9 @@ def train_transform(rgb, sparse, target, position, args):
 
     if sparse is not None:
         sparse = transform_geometric(sparse)
+    if denseDepth is not  None:
+        denseDepth = transform_geometric(denseDepth)
+
     target = transform_geometric(target)
     if rgb is not None:
         brightness = np.random.uniform(max(0, 1 - args.jitter),
@@ -241,6 +252,12 @@ def train_transform(rgb, sparse, target, position, args):
             elif sparse.ndim == 2:
                 sparse = sparse[i:i + rheight, j:j + rwidth]
 
+        if denseDepth is not None:
+            if denseDepth.ndim == 3:
+                denseDepth = denseDepth[i:i + rheight, j:j + rwidth, :]
+            elif denseDepth.ndim == 2:
+                denseDepth = denseDepth[i:i + rheight, j:j + rwidth]
+
         if target is not None:
             if target.ndim == 3:
                 target = target[i:i + rheight, j:j + rwidth, :]
@@ -253,9 +270,9 @@ def train_transform(rgb, sparse, target, position, args):
             elif position.ndim == 2:
                 position = position[i:i + rheight, j:j + rwidth]
 
-    return rgb, sparse, target, position
+    return rgb, sparse, target, position, denseDepth
 
-def val_transform(rgb, sparse, target, position, args):
+def val_transform(rgb, sparse, target, position, args, denseDepth):
     oheight = args.val_h
     owidth = args.val_w
 
@@ -271,11 +288,11 @@ def val_transform(rgb, sparse, target, position, args):
     if position is not None:
         position = transform(position)
 
-    return rgb, sparse, target, position
+    return rgb, sparse, target, position, denseDepth
 
 
-def no_transform(rgb, sparse, target, position, args):
-    return rgb, sparse, target, position
+def no_transform(rgb, sparse, target, position, args, denseDepth):
+    return rgb, sparse, target, position, denseDepth
 
 
 to_tensor = transforms.ToTensor()
@@ -344,22 +361,22 @@ class KittiDepth(data.Dataset):
     def __getraw__(self, index):
         rgb = rgb_read(self.paths['rgb'][index]) if \
             (self.paths['rgb'][index] is not None and (self.args.use_rgb or self.args.use_g)) else None
-        sparse = depth_read(self.paths['d'][index]) if \
+        sparse, denseDepth = depth_read(self.paths['d'][index], True) if \
             (self.paths['d'][index] is not None and self.args.use_d) else None
-        target = depth_read(self.paths['gt'][index]) if \
+        target = depth_read(self.paths['gt'][index], False) if \
             self.paths['gt'][index] is not None else None
-        return rgb, sparse, target
+        return rgb, sparse, target, denseDepth
 
     def __getitem__(self, index):
-        rgb, sparse, target = self.__getraw__(index)
+        rgb, sparse, target, denseDepth = self.__getraw__(index)
         position = CoordConv.AddCoordsNp(self.args.val_h, self.args.val_w)
         position = position.call()
-        rgb, sparse, target, position = self.transform(rgb, sparse, target, position, self.args)
+        rgb, sparse, target, position, denseDepth = self.transform(rgb, sparse, target, position, self.args, denseDepth)
 
         rgb, gray = handle_gray(rgb, self.args) # 将 rgb图 转换成 gray图
         # candidates = {"rgb": rgb, "d": sparse, "gt": target, \
         #              "g": gray, "r_mat": r_mat, "t_vec": t_vec, "rgb_near": rgb_near}
-        candidates = {"rgb": rgb, "d": sparse, "gt": target, \
+        candidates = {"rgb": rgb, "d": sparse, "gt": target, "dd":denseDepth, \
                       "g": gray, 'position': position, 'K': self.K}
 
         items = {
