@@ -85,17 +85,17 @@ parser.add_argument('--resume',
                     metavar='PATH',
                     help='path to latest checkpoint (default: none)')
 parser.add_argument('--data-folder',
-                    default='/root/autodl-tmp/KITTI_Depth_Completion',
+                    default='/home/cqjtu/PeNet/dataset/KITTI_Depth_Completion',
                     type=str,
                     metavar='PATH',
                     help='data folder (default: none)')
 parser.add_argument('--data-folder-rgb',
-                    default='/root/autodl-tmp/KITTI_Depth_Completion/raw',
+                    default='/home/cqjtu/PeNet/dataset/KITTI_Depth_Completion/raw',
                     type=str,
                     metavar='PATH',
                     help='data folder rgb (default: none)')
 parser.add_argument('--data-folder-save',
-                    default='/root/autodl-tmp/KITTI_Depth_Completion/submit_test/',
+                    default='/home/cqjtu/PeNet/dataset/submit_test/',
                     type=str,
                     metavar='PATH',
                     help='data folder test results(default: none)')
@@ -146,7 +146,10 @@ parser.add_argument('-d', '--dilation-rate', default="2", type=int,
                     help='CSPN++ dilation rate')
 
 args = parser.parse_args()
-args.result = os.path.join('..', 'results') #权重和训练数据 保存地址
+# args.result = os.path.join('..', 'results')
+args.result = "/home/cqjtu/PeNet/results"
+if not os.path.exists(args.result):
+    os.mkdir(args.result)
 args.use_rgb = ('rgb' in args.input)
 args.use_d = 'd' in args.input
 args.use_g = 'g' in args.input
@@ -181,7 +184,7 @@ def iterate(mode, args, loader, model, optimizer, logger, epoch):
     assert mode in ["train", "val", "eval", "test_prediction", "test_completion"], \
         "unsupported mode: {}".format(mode)
     if mode == 'train':
-        model.train() ## setting train mode == 0
+        model.train()
         lr = helper.adjust_learning_rate(args.lr, optimizer, actual_epoch, args)
     else:
         model.eval()
@@ -226,11 +229,9 @@ def iterate(mode, args, loader, model, optimizer, logger, epoch):
         w_st1, w_st2 = 0, 0
         round1, round2, round3 = 1, 3, None
         if(actual_epoch <= round1):
-            # w_st1, w_st2 = 0.2, 0.2
-            w_st1, w_st2 = 0.2, 0
+            w_st1, w_st2 = 0.2, 0.2
         elif(actual_epoch <= round2):
-            # w_st1, w_st2 = 0.05, 0.05
-            w_st1, w_st2 = 0.05, 0
+            w_st1, w_st2 = 0.05, 0.05
         else:
             w_st1, w_st2 = 0, 0
 
@@ -241,9 +242,8 @@ def iterate(mode, args, loader, model, optimizer, logger, epoch):
 
             if args.network_model == 'e':
                 st1_loss = depth_criterion(st1_pred, gt)
-                # st2_loss = depth_criterion(st2_pred, gt)
-                # loss = (1 - w_st1 - w_st2) * depth_loss + w_st1 * st1_loss + w_st2 * st2_loss
-                loss = (1 - w_st1) * depth_loss + w_st1 * st1_loss
+                st2_loss = depth_criterion(st2_pred, gt)
+                loss = (1 - w_st1 - w_st2) * depth_loss + w_st1 * st1_loss + w_st2 * st2_loss
             else:
                 loss = depth_loss
 
@@ -277,7 +277,6 @@ def iterate(mode, args, loader, model, optimizer, logger, epoch):
                 if mode != 'train':
                     logger.conditional_print(mode, i, epoch, lr, len(loader),
                                      block_average_meter, average_meter)
-                # evalution used
                 logger.conditional_save_img_comparison(mode, i, batch_data, pred,
                                                    epoch)
                 logger.conditional_save_pred(mode, i, pred, epoch)
@@ -301,7 +300,7 @@ def main():
                   end='')
             checkpoint = torch.load(args.evaluate, map_location=device)
             #args = checkpoint['args']
-            args.start_epoch = checkpoint['epoch'] + 1  # 起始 epoch 数
+            args.start_epoch = checkpoint['epoch'] + 1
             args.data_folder = args_new.data_folder
             args.val = args_new.val
             is_eval = True
@@ -327,11 +326,11 @@ def main():
         else:
             print("No checkpoint found at '{}'".format(args.resume))
             return
+
     print("=> creating model and optimizer ... ", end='')
     model = None
     penet_accelerated = False
     if (args.network_model == 'e'):
-        # ENet module init
         model = ENet(args).to(device)
     elif (is_eval == False):
         if (args.dilation_rate == 1):
@@ -346,7 +345,6 @@ def main():
             model = PENet_C1(args).to(device)
             penet_accelerated = True
         elif (args.dilation_rate == 2):
-            ## test mode dilation_rate = 2
             model = PENet_C2(args).to(device)
             penet_accelerated = True
         elif (args.dilation_rate == 4):
@@ -376,37 +374,28 @@ def main():
     if checkpoint is not None:
         logger.best_result = checkpoint['best_result']
         del checkpoint
-    print("=> logger logger created.")
+    print("=> logger created.")
 
     test_dataset = None
     test_loader = None
-
-    # test process
     if (args.test):
         test_dataset = KittiDepth('test_completion', args)
         test_loader = torch.utils.data.DataLoader(
             test_dataset,
             batch_size=1,
             shuffle=False,
+            num_workers=1,
             pin_memory=True)
-
-        # num_workers = 1
-
         iterate("test_completion", args, test_loader, model, None, logger, 0)
         return
 
-    # end test process
-
-    # evaluation process
     val_dataset = KittiDepth('val', args)
     val_loader = torch.utils.data.DataLoader(
         val_dataset,
         batch_size=1,
         shuffle=False,
+        num_workers=2,
         pin_memory=True)  # set batch size to be 1 for validation
-
-        # num_workers = 2
-
     print("\t==> val_loader size:{}".format(len(val_loader)))
 
     if is_eval == True:
@@ -416,8 +405,6 @@ def main():
         result, is_best = iterate("val", args, val_loader, model, None, logger,
                               args.start_epoch - 1)
         return
-
-    # end evaluation process
 
     if (args.freeze_backbone == True):
         for p in model.backbone.parameters():
@@ -445,7 +432,6 @@ def main():
 
     model = torch.nn.DataParallel(model)
 
-    # train process
     # Data loading code
     print("=> creating data loaders ... ")
     if not is_eval:
@@ -486,7 +472,6 @@ def main():
             'args' : args,
         }, is_best, epoch, logger.output_directory)
 
-    # end train process
 
 if __name__ == '__main__':
     main()
