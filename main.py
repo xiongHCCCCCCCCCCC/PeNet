@@ -95,7 +95,7 @@ parser.add_argument('--data-folder-rgb',
                     metavar='PATH',
                     help='data folder rgb (default: none)')
 parser.add_argument('--data-folder-save',
-                    default='/home/cqjtu/PeNet/dataset/KITTI_Depth_Completion',
+                    default='/home/cqjtu/PeNet/Version2TestResult',
                     type=str,
                     metavar='PATH',
                     help='data folder test results(default: none)')
