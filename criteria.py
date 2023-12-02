@@ -27,3 +27,9 @@ class MaskedL1Loss(nn.Module):
         diff = diff[valid_mask]
         self.loss = diff.abs().mean()
         return self.loss
+
+# class GradLoss(nn.Module):
+#     def __init__(self):
+#         super(GradLoss, self).__init__()
+#         self.gradX = nn.Conv2d()
+

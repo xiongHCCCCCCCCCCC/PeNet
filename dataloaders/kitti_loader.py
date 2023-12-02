@@ -172,10 +172,16 @@ def depth_read(filename, needDense=False):
     depth = depth_png.astype(np.float) / 256. ##将16bit转换为8bit
     if needDense:
         global  denseDepth
-        denseDepth = fill_in_fast(depth)
+        denseDepth_ =  depth_png.astype(np.float32) / 256.
+        denseDepth = fill_in_fast(denseDepth_)
     # depth[depth_png == 0] = -1.
+    if needDense:
+        denseDepth = denseDepth.astype(np.float)
+
     depth = np.expand_dims(depth, -1)
-    denseDepth = np.expand_dims(denseDepth, -1)
+    if needDense:
+        denseDepth = np.expand_dims(denseDepth, -1)
+        
     if needDense:
         return depth, denseDepth
     else:
