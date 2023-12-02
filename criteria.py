@@ -51,10 +51,9 @@ class Sobel(nn.Module):
   
         return out
 
-class gradLoss(nn.Module):
+class gradLoss():
     def __init__(self) -> None:
-        super(gradLoss).__init__()
-        self.getGrad = Sobel().cuda()
+        self.getGrad = Sobel()
         self.cos = nn.CosineSimilarity(dim=1, eps=0)
         self.mask = None
 

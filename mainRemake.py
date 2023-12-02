@@ -79,17 +79,17 @@ parser.add_argument('--resume',
                     metavar='PATH',
                     help='path to latest checkpoint (default: none)')
 parser.add_argument('--data-folder',
-                    default='/root/autodl-tmp/KITTI_Depth_Completion',
+                    default='/home/cqjtu/PeNet/dataset/KITTI_Depth_Completion',
                     type=str,
                     metavar='PATH',
                     help='data folder (default: none)')
 parser.add_argument('--data-folder-rgb',
-                    default='/root/autodl-tmp/KITTI_Depth_Completion/raw',
+                    default='/home/cqjtu/PeNet/dataset/KITTI_Depth_Completion/raw',
                     type=str,
                     metavar='PATH',
                     help='data folder rgb (default: none)')
 parser.add_argument('--data-folder-save',
-                    default='/root/autodl-tmp/KITTI_Depth_Completion/submit_test/',
+                    default='/home/cqjtu/PeNet/Version3TestResult',
                     type=str,
                     metavar='PATH',
                     help='data folder test results(default: none)')
@@ -140,7 +140,7 @@ parser.add_argument('-d', '--dilation-rate', default="2", type=int,
                     help='CSPN++ dilation rate')
 
 args = parser.parse_args()
-args.result = os.path.join('..', 'results') #权重和训练数据 保存地址
+args.result = "/home/cqjtu/PeNet/resultsVersion3" #权重和训练数据 保存地址
 args.use_rgb = ('rgb' in args.input)
 args.use_d = 'd' in args.input
 args.use_g = 'g' in args.input
@@ -226,7 +226,7 @@ def iterate(mode, args, loader, model, optimizer, logger, epoch):
         if mode == 'train':
             # Loss 1: the direct depth supervision from ground truth label
             # mask=1 indicates that a pixel does not ground truth labels
-            depth_loss = depth_criterion(gt, pred, (1-w_st1-w_st2), w_st1, w_st2)
+            depth_loss = depth_criterion.forward(gt, pred, (1-w_st1-w_st2), w_st1, w_st2)
             loss = depth_loss
             # if args.network_model == 'e':
             #     loss = depth_loss

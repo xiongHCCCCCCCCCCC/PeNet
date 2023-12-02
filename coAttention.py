@@ -13,7 +13,7 @@ from torch.nn import functional as F
 from torch.autograd import Variable
 torch_ver = torch.__version__[:3]
 
-__all__ = ['PCAM_Module', 'CCAM_Module', 'PCCMA_Moudle']
+__all__ = ['PCAM_Module', 'CCAM_Module']
 
 class PCAM_Module(Module):
     """ Position attention module"""

@@ -7,7 +7,7 @@ from PIL import Image
 import torch.utils.data as data
 from dataloaders import transforms
 import CoordConv
-from coarseDepth import fill_in_fast
+from dataloaders.coarseDepth import fill_in_fast
 
 input_options = ['d', 'rgb', 'rgbd', 'g', 'gd']
 
