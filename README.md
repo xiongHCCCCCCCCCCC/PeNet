@@ -84,20 +84,20 @@ The overall data directory is structured as follows:
 ```
 ├── kitti_depth
 |   ├── depth
-|   |   ├──data_depth_annotated
+|   |   ├──data_depth_annotated(true value)
 |   |   |  ├── train
 |   |   |  ├── val
-|   |   ├── data_depth_velodyne
+|   |   ├── data_depth_velodyne(raw depth)
 |   |   |  ├── train
 |   |   |  ├── val
-|   |   ├── data_depth_selection
+|   |   ├── data_depth_selection(test and eval dataset)
 |   |   |  ├── test_depth_completion_anonymous
 |   |   |  |── test_depth_prediction_anonymous
 |   |   |  ├── val_selection_cropped
 ```
 
 ```
-├── kitti_raw
+├── kitti_raw(img)
 |   ├── 2011_09_26
 |   ├── 2011_09_28
 |   ├── 2011_09_29

@@ -95,7 +95,7 @@ parser.add_argument('--data-folder-rgb',
                     metavar='PATH',
                     help='data folder rgb (default: none)')
 parser.add_argument('--data-folder-save',
-                    default='/home/cqjtu/PeNet/dataset/submit_test/',
+                    default='/home/cqjtu/PeNet/dataset/KITTI_Depth_Completion',
                     type=str,
                     metavar='PATH',
                     help='data folder test results(default: none)')
@@ -147,7 +147,7 @@ parser.add_argument('-d', '--dilation-rate', default="2", type=int,
 
 args = parser.parse_args()
 # args.result = os.path.join('..', 'results')
-args.result = "/home/cqjtu/PeNet/results"
+args.result = "/home/cqjtu/PeNet/results_test"
 if not os.path.exists(args.result):
     os.mkdir(args.result)
 args.use_rgb = ('rgb' in args.input)
