@@ -302,10 +302,5 @@ class ENetAttention(nn.Module):
 
         output = d + depth_output
 
-        # d_depth, d_conf = torch.chunk(depth_output, 2, dim=1)  # 稀疏点云训练结果
-
-        # rgb_conf, d_conf = torch.chunk(self.softmax(torch.cat((rgb_conf, d_conf), dim=1)), 2, dim=1)
-        # output = rgb_conf*rgb_depth + d_conf*d_depth
-
         if(self.args.network_model == 'e'):
             return output
