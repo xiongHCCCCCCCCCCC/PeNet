@@ -275,6 +275,7 @@ def iterate(mode, args, loader, model, optimizer, logger, epoch):
                 ]
 
                 if mode != 'train':
+                    ## val
                     logger.conditional_print(mode, i, epoch, lr, len(loader),
                                      block_average_meter, average_meter)
                 logger.conditional_save_img_comparison(mode, i, batch_data, pred,
