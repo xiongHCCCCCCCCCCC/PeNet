@@ -379,13 +379,10 @@ def main():
 
     # end evaluation process
 
-    if (args.freeze_backbone == True):
-        for p in model.backbone.parameters():
-            p.requires_grad = False
-        model_named_params = [
-            p for _, p in model.named_parameters() if p.requires_grad
-        ]
-        optimizer = torch.optim.Adam(model_named_params, lr=args.lr, weight_decay=args.weight_decay, betas=(0.9, 0.99))
+    model_named_params = [
+        p for _, p in model.named_parameters() if p.requires_grad
+    ]
+    optimizer = torch.optim.Adam(model_named_params, lr=args.lr, weight_decay=args.weight_decay, betas=(0.9, 0.99))
 
     print("completed.")
 
