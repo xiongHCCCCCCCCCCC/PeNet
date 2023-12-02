@@ -276,3 +276,14 @@ def multiscale(img):
     img4 = avgpool(img3)
     img5 = avgpool(img4)
     return img5, img4, img3, img2, img1
+
+def countNetParams(model):
+    NetParamSavePath = os.path.join(os.getcwd(), "NetParam.txt")
+
+    if not os.path.exists(NetParamSavePath):
+        os.makedirs(NetParamSavePath)
+
+    with open(NetParamSavePath, "w") as file:
+        paramCount = sum(p.numel() for p in model.parameters() if p.requires_grad)
+        file.write(f'paramCount: {paramCount} M')
+

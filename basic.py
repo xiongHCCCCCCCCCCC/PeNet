@@ -280,7 +280,7 @@ class BasicBlockGeo(nn.Module):
     expansion = 1
     __constants__ = ['downsample']
 
-    def __init__(self, inplanes, planes, stride=1, downsample=None, groups=1,
+    def  __init__(self, inplanes, planes, stride=1, downsample=None, groups=1,
                  base_width=64, dilation=1, norm_layer=None, geoplanes=3):
         super(BasicBlockGeo, self).__init__()
 
