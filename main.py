@@ -170,6 +170,9 @@ print("=> using '{}' for computation.".format(device))
 depth_criterion = criteria.MaskedMSELoss() if (
     args.criterion == 'l2') else criteria.MaskedL1Loss()
 
+# define grad loss functions
+depth_gradCriterion = criteria.gradLoss()
+
 #multi batch
 multi_batch_size = 1
 def iterate(mode, args, loader, model, optimizer, logger, epoch):
@@ -238,12 +241,13 @@ def iterate(mode, args, loader, model, optimizer, logger, epoch):
         if mode == 'train':
             # Loss 1: the direct depth supervision from ground truth label
             # mask=1 indicates that a pixel does not ground truth labels
-            depth_loss = depth_criterion(pred, gt)
+            depth_loss = depth_gradCriterion.forward(gt, pred, (1 - w_st1 - w_st2), w_st1, w_st2)
 
             if args.network_model == 'e':
-                st1_loss = depth_criterion(st1_pred, gt)
-                st2_loss = depth_criterion(st2_pred, gt)
-                loss = (1 - w_st1 - w_st2) * depth_loss + w_st1 * st1_loss + w_st2 * st2_loss
+                # st1_loss = depth_criterion(st1_pred, gt)
+                # st2_loss = depth_criterion(st2_pred, gt)
+                # loss = (1 - w_st1 - w_st2) * depth_loss + w_st1 * st1_loss + w_st2 * st2_loss
+                loss = depth_loss
             else:
                 loss = depth_loss
 
