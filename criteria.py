@@ -55,6 +55,7 @@ class gradLoss():
     def __init__(self) -> None:
         self.getGrad = Sobel().cuda()
         self.cos = nn.CosineSimilarity(dim=1, eps=0)
+        self.depthLoss = MaskedL1Loss().cuda()
 
     def forward(self, depth, output, lambda1, lambda2, lambda3):
         assert depth.dim() == output.dim(), "inconsistent dimensions"
@@ -73,11 +74,13 @@ class gradLoss():
         depth_normal = torch.cat((-depth_grad_dx, -depth_grad_dy, ones), 1)
         output_normal = torch.cat((-output_grad_dx, -output_grad_dy, ones), 1)
 
-        loss_depth = torch.log(torch.abs(output[maskSignleChannel] - depth[maskSignleChannel]) + 0.5).mean()
+        loss_depth = self.depthLoss(output, depth)
         loss_dx = torch.log(torch.abs(output_grad_dx[maskSignleChannel] - depth_grad_dx[maskSignleChannel]) + 0.5).mean()
         loss_dy = torch.log(torch.abs(output_grad_dy[maskSignleChannel] - depth_grad_dy[maskSignleChannel]) + 0.5).mean()
         diffNorm = self.cos(output_normal, depth_normal).contiguous().view(output.size())
         loss_normal = torch.abs(1 - diffNorm[maskSignleChannel]).mean()
 
         loss = lambda1 * loss_depth + lambda2 * (loss_dx + loss_dy) + lambda3 * loss_normal
+        print(f'loss: {loss},  loss_depth:{loss_depth},  loss_dx:{loss_dx},  loss_dy:{loss_dy}, loss_normal:{loss_normal}, '
+              f'lambda1:{lambda1},  lambda2:{lambda2},  lambda3:{lambda3}')
         return loss

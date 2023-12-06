@@ -230,13 +230,13 @@ def iterate(mode, args, loader, model, optimizer, logger, epoch):
         # inter loss_param
         st1_loss, st2_loss, loss = 0, 0, 0
         w_st1, w_st2 = 0, 0
-        round1, round2, round3 = 1, 3, None
+        round1, round2, round3 = 10, 20, None
         if(actual_epoch <= round1):
-            w_st1, w_st2 = 0.2, 0.2
+            w_st1, w_st2 = 0.01, 0.01
         elif(actual_epoch <= round2):
             w_st1, w_st2 = 0.05, 0.05
         else:
-            w_st1, w_st2 = 0, 0
+            w_st1, w_st2 = 0.1, 0.1
 
         if mode == 'train':
             # Loss 1: the direct depth supervision from ground truth label
