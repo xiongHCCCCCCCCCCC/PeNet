@@ -225,7 +225,7 @@ class BAMBlock(nn.Module):
 
 class FusionBAMBlock(nn.Module):
 
-    def __init__(self, channel=512, reduction=16, dia_val=2):
+    def __init__(self, channel, reduction=16, dia_val=2):
         super().__init__()
         self.ca = FusionChannelAttention(channel=channel, reduction=reduction)
         self.sa = FusionSpatialAttention(channel=channel, reduction=reduction, dia_val=dia_val)

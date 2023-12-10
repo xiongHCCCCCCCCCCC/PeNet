@@ -13,7 +13,8 @@ import criteria
 import helper
 import vis_utils
 
-from modelRemake import ENetAttention
+# from modelRemake import ENetAttention
+from modelFusionBAM import ENetFusionBAM
 
 parser = argparse.ArgumentParser(description='Sparse-to-Dense')
 parser.add_argument('-n',
@@ -158,7 +159,8 @@ else:
 print("=> using '{}' for computation.".format(device))
 
 # define loss functions
-depth_criterion = criteria.gradLoss()
+# depth_criterion = criteria.gradLoss()
+depth_criterion = criteria.MaskedMSELoss()
 
 #multi batch
 multi_batch_size = 1
@@ -203,7 +205,7 @@ def iterate(mode, args, loader, model, optimizer, logger, epoch):
         #'''
         if(args.network_model == 'e'):
             start = time.time()
-            pred = model(batch_data)
+            rgbPred, pred = model(batch_data)
         else:
             start = time.time()
             pred = model(batch_data)
@@ -213,26 +215,25 @@ def iterate(mode, args, loader, model, optimizer, logger, epoch):
         #'''
 
         w_st1, w_st2 = 0, 0
-        round1, round2 = 1, 10
+        round1, round2 = 10, 20, 30
         if(actual_epoch <= round1):
-            w_st1, w_st2 = 0.2, 0.2
+            w_st1, w_st2 = 0.4, 0.6
         elif(actual_epoch <= round2):
-            w_st1, w_st2 = 0.05, 0.05
+            w_st1, w_st2 = 0.2, 0.8
         else:
-            w_st1, w_st2 = 0, 0
+            w_st1, w_st2 = 0, 1
 
         depth_loss, photometric_loss, smooth_loss, mask = 0, 0, 0, None
 
         if mode == 'train':
             # Loss 1: the direct depth supervision from ground truth label
             # mask=1 indicates that a pixel does not ground truth labels
-            depth_loss = depth_criterion.forward(gt, pred, (1-w_st1-w_st2), w_st1, w_st2)
-            loss = depth_loss
-            # if args.network_model == 'e':
-            #     loss = depth_loss
-            # else:
-            #     loss = depth_loss
-
+            if args.network_model == 'e':
+                st1_loss = depth_criterion(rgbPred, gt)
+                st2_loss = depth_criterion(pred, gt)
+                loss = w_st1 * st1_loss + w_st2 * st2_loss
+            else:
+                loss = depth_loss
 
             if i % multi_batch_size == 0:
                 optimizer.zero_grad()
@@ -318,7 +319,7 @@ def main():
     model = None
     if (args.network_model == 'e'):
         # ENet module init
-        model = ENetAttention(args).to(device)
+        model = ENetFusionBAM(args).to(device)
 
     model_named_params = None
     optimizer = None
