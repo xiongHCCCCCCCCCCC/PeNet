@@ -13,17 +13,12 @@ from torch.nn import functional as F
 from torch.autograd import Variable
 torch_ver = torch.__version__[:3]
 
-<<<<<<< Updated upstream
-__all__ = ['PCAM_Module', 'CCAM_Module']
-=======
 import numpy as np
 import torch
 from torch import nn
 from torch.nn import init
 
-
 __all__ = ['PCAM_Module', 'CCAM_Module', 'FusionBAMBlock']
->>>>>>> Stashed changes
 
 class PCAM_Module(Module):
     """ Position attention module"""
