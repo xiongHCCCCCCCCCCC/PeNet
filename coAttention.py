@@ -251,7 +251,8 @@ class FusionBAMBlock(nn.Module):
         sa_out = self.sa(depth, Image)
         ca_out = self.ca(depth, Image)
         weight = self.sigmoid(sa_out + ca_out)
-        out = (1 + weight) * depth
+        depth_image = depth + Image
+        out = (1 + weight) * depth_image
         return out
 
 
